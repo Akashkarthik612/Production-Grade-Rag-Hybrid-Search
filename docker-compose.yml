@@ -1,0 +1,11 @@
+services:
+  rag-ingest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./papers:/app/papers
+      - ./.chroma:/app/.chroma
+    command: ["python", "-m", "src.scripts.run_ingest"]

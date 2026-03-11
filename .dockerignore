@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.chroma/
+notebooks/
+.git/
+.vscode/
