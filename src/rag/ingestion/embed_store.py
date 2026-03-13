@@ -6,7 +6,6 @@ from typing import Any
 
 import chromadb
 from chromadb.config import Settings
-from chromadb.errors import InternalError
 
 try:
     from src.rag.ingestion.chunking import chunk_text
@@ -17,6 +16,10 @@ except ModuleNotFoundError:
     sys.path.append(str(Path(__file__).resolve().parents[3]))
     from src.rag.ingestion.chunking import chunk_text
     from src.rag.ingestion.inout_ingestion import load_documents_from_local
+
+
+_CHROMA_CLIENT_CACHE: dict[tuple[str, str], chromadb.ClientAPI] = {}
+
 
 # vector creation below is a simple hash-based embedding for demonstration and fallback purposes.
 def _hash_embed(text: str, dim: int = 256) -> list[float]:
@@ -48,16 +51,22 @@ def _embed_texts(texts: list[str], provider: str = "default") -> tuple[list[list
 def _get_chroma_client(chroma_path: str = ".chroma") -> tuple[chromadb.ClientAPI, str]:
     db_path = Path(chroma_path)
     db_path.mkdir(parents=True, exist_ok=True)
+    resolved_path = str(db_path.resolve())
 
     try:
-        return (
-            chromadb.PersistentClient(
+        cache_key = ("persistent", resolved_path)
+        if cache_key not in _CHROMA_CLIENT_CACHE:
+            _CHROMA_CLIENT_CACHE[cache_key] = chromadb.PersistentClient(
                 path=str(db_path), settings=Settings(anonymized_telemetry=False)
-            ),
-            "persistent",
-        )
-    except InternalError:
-        return chromadb.Client(settings=Settings(anonymized_telemetry=False)), "in-memory"
+            )
+        return _CHROMA_CLIENT_CACHE[cache_key], "persistent"
+    except Exception:
+        cache_key = ("in-memory", resolved_path)
+        if cache_key not in _CHROMA_CLIENT_CACHE:
+            _CHROMA_CLIENT_CACHE[cache_key] = chromadb.Client(
+                settings=Settings(anonymized_telemetry=False)
+            )
+        return _CHROMA_CLIENT_CACHE[cache_key], "in-memory"
 
 
 def _build_chunk_records(

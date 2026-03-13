@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
@@ -22,19 +22,33 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
+        shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
+          python -m pip install -r requirements.txt
+          python -m pip install pytest
 
       - name: Run tests
         env:
           PYTHONPATH: .
+          RAG_COHERE_API_KEY: ${{ secrets.RAG_COHERE_API_KEY }}
+        shell: pwsh
         run: |
-          pytest -q
-          status=$?
-          if [ "$status" -eq 5 ]; then
-            echo "No tests collected yet. Placeholder test files are allowed."
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          python -m pytest -q -s tests/ci
+          $status = $LASTEXITCODE
+          if ($status -eq 5) {
+            Write-Host "No tests collected yet. Placeholder test files are allowed."
             exit 0
-          fi
-          exit "$status"
+          }
+          exit $status
+
+      - name: Upload query evaluation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: query-eval-artifacts
+          path: |
+            artifacts/query_eval_answers.json
+            artifacts/ci_eval_chroma
+          if-no-files-found: warn

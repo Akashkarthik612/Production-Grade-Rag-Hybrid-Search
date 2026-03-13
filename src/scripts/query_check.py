@@ -14,12 +14,11 @@ try:
         RAG_QUERY_TOP_K,
         RAG_RERANK_ENABLED,
         RAG_RERANK_TOP_N,
-        RAG_RRF_K,
     )
     from src.rag.generation.cite_answer import build_query_report, write_query_results_docx
     from src.rag.ingestion.embed_store import _get_chroma_client
-    from src.rag.retrieval.rerank import rerank_with_cohere
-    from src.rag.retrieval.retrieve import hybrid_search
+    from src.rag.retrieval.rerank import retrieve_and_rerank
+    from src.rag.retrieval.retrieve import collect_rerank_candidates
 except ModuleNotFoundError:
     # Allow running this file directly: `python src/scripts/query_check.py`.
     sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -34,12 +33,11 @@ except ModuleNotFoundError:
         RAG_QUERY_TOP_K,
         RAG_RERANK_ENABLED,
         RAG_RERANK_TOP_N,
-        RAG_RRF_K,
     )
     from src.rag.generation.cite_answer import build_query_report, write_query_results_docx
     from src.rag.ingestion.embed_store import _get_chroma_client
-    from src.rag.retrieval.rerank import rerank_with_cohere
-    from src.rag.retrieval.retrieve import hybrid_search
+    from src.rag.retrieval.rerank import retrieve_and_rerank
+    from src.rag.retrieval.retrieve import collect_rerank_candidates
 
 
 DEFAULT_QUERIES = [
@@ -84,28 +82,27 @@ def run_query_check(
         return
 
     for query in queries:
-        hybrid_results = hybrid_search(
+        candidate_results = collect_rerank_candidates(
             query=query,
             top_k=candidate_k,
             candidate_k=candidate_k,
-            rrf_k=RAG_RRF_K,
         )
 
         rerank_status = {
             "status": "skipped",
             "detail": "Reranker disabled. Set RAG_RERANK_ENABLED=1 to enable Cohere reranking.",
         }
-        final_results = hybrid_results[:top_k]
+        final_results = candidate_results[:top_k]
         if RAG_RERANK_ENABLED:
             try:
-                reranked_results, rerank_status = rerank_with_cohere(
+                final_results, rerank_status = retrieve_and_rerank(
                     query=query,
-                    candidates=hybrid_results,
+                    top_k=top_k,
+                    candidate_k=candidate_k,
                     api_key=RAG_COHERE_API_KEY,
                     model=RAG_COHERE_RERANK_MODEL,
-                    top_n=min(RAG_RERANK_TOP_N, len(hybrid_results)),
+                    rerank_top_n=RAG_RERANK_TOP_N,
                 )
-                final_results = reranked_results[:top_k]
             except Exception as exc:
                 rerank_status = {"status": "error", "detail": str(exc)}
 
@@ -133,7 +130,7 @@ def run_query_check(
         for citation in report["citations"]:
             print(citation)
         print("\nPIPELINE:")
-        print(f"hybrid_candidates={len(hybrid_results)} | reranker={rerank_status['status']}")
+        print(f"rerank_candidates={len(candidate_results)} | reranker={rerank_status['status']}")
         if rerank_status.get("detail"):
             print(rerank_status["detail"])
 
