@@ -12,6 +12,11 @@ from src.rag.retrieval import retrieve as retrieve_module
 from src.rag.retrieval.rerank import retrieve_and_rerank
 
 
+def _safe_console_text(value: object) -> str:
+    text = str(value)
+    return text.encode("utf-8", errors="replace").decode("utf-8")
+
+
 DEFAULT_QUERIES = [
     "What core architectural components do Transformers use to model sequences instead of recurrent or convolutional neural networks?",
     "In the standard Transformer encoder, what are the two main sub-layers found in each encoding block?",
@@ -73,10 +78,12 @@ def test_query_evaluation_pipeline(monkeypatch) -> None:
             }
         )
 
-        print(f"QUERY: {query}")
-        print(f"ANSWER: {report['answer']}")
-        print(f"CITATIONS: {report['citations']}")
-        print(f"RERANKER: {rerank_status['status']}")
+        print(f"QUERY: {_safe_console_text(query)}")
+        print(f"ANSWER: {_safe_console_text(report['answer'])}")
+        print(f"CITATIONS: {_safe_console_text(report['citations'])}")
+        print(f"RERANKER: {_safe_console_text(rerank_status['status'])}")
+        if rerank_status.get("detail"):
+            print(f"RERANK DETAIL: {_safe_console_text(rerank_status['detail'])}")
         print("-" * 80)
 
         assert results, f"No results returned for query: {query}"
