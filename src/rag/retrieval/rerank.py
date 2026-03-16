@@ -43,7 +43,7 @@ def rerank_with_cohere(
         return [], {"status": "skipped", "detail": "No candidates to rerank."}
 
     if not api_key.strip():
-        return candidates, {"status": "Skipped because of API key issue", "detail": "RAG_COHERE_API_KEY is not set."}
+        return candidates, {"status": "skipped", "detail": "RAG_COHERE_API_KEY is not set."}
 
     client = ClientV2(api_key=api_key.strip(), timeout=timeout)
     response = client.rerank(
