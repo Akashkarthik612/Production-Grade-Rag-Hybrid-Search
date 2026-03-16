@@ -23,11 +23,6 @@ DEFAULT_QUERIES = [
     "Why is parallelization difficult in recurrent models compared to Transformers?",
     "What specific mechanism does the Transformer use to distinguish the order of words in a sequence?",
     "What BLEU score did the original Transformer achieve on the WMT 2014 English-to-German translation task?",
-    "How does the attention mechanism in Transformers shorten the computational distance between two inputs compared to RNNs?",
-    "What are the three components of the QKV attention model?",
-    "In the post-norm Transformer, where is the residual connection created relative to layer normalization?",
-    "What is the purpose of multi-head attention in the Transformer?",
-    "Which optimization method is commonly used for updating weights during Transformer training?",
 ]
 
 

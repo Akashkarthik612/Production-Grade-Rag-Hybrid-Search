@@ -46,6 +46,11 @@ Examples:
 - `RAG_OVERLAP`
 - `RAG_BATCH_SIZE`
 - `RAG_INGEST_VERSION`
+- `RAG_RERANK_ENABLED`
+- `RAG_COHERE_API_KEY`
+- `RAG_COHERE_RERANK_MODEL`
+
+Copy `.env.example` to `.env` and adjust values for your machine. Cohere reranking is optional and stays off by default unless both `RAG_RERANK_ENABLED=1` and a non-empty `RAG_COHERE_API_KEY` are set.
 
 ## Run Ingestion
 
@@ -82,6 +87,14 @@ The query check currently prints:
 - `top_k` retrieval count
 - returned chunk snippets
 - retrieval distances for each result
+
+If Cohere reranking is enabled, the query check will also report rerank status for the final results.
+
+## Cohere Keys
+
+For demo use, a Cohere trial or evaluation key is enough to test reranking. Keep that key in your local environment or `.env` and never commit it to the repository.
+
+For production, use a paid Cohere key or your clients' own keys. Trial keys are suitable for low-volume demos and development, but they have lower limits and are not intended for sustained production traffic.
 
 ## CI
 
