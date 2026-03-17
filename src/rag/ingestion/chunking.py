@@ -3,6 +3,23 @@
 import tiktoken
 
 
+class _FallbackEncoding:
+    """Small offline-safe tokenizer for environments without cached tiktoken data."""
+
+    def encode(self, text: str) -> list[str]:
+        return text.split()
+
+    def decode(self, tokens: list[str]) -> str:
+        return " ".join(tokens)
+
+
+def _get_encoding():
+    try:
+        return tiktoken.get_encoding("cl100k_base")
+    except Exception:
+        return _FallbackEncoding()
+
+
 def chunk_text(
     text: str,
     min_tokens: int = 500,
@@ -19,7 +36,7 @@ def chunk_text(
     if min_tokens <= 0:
         raise ValueError("min_tokens must be > 0")
 
-    encoding = tiktoken.get_encoding("cl100k_base")
+    encoding = _get_encoding()
     tokens = encoding.encode(text)
     if not tokens:
         return []

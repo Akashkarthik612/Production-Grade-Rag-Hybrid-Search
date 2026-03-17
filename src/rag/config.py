@@ -1,10 +1,29 @@
 """Runtime settings for ingestion pipeline."""
 
+from pathlib import Path
 import os
+
+
+def _load_dotenv() -> None:
+    """Load simple KEY=VALUE pairs from a local .env file if present."""
+    dotenv_path = Path(".env")
+    if not dotenv_path.exists():
+        return
+
+    for raw_line in dotenv_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
 
 
 def _as_bool(name: str, default: str = "0") -> bool:
     return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
+_load_dotenv()
 
 
 RAG_PAPERS_DIR = os.getenv("RAG_PAPERS_DIR", "papers")

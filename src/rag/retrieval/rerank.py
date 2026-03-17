@@ -6,8 +6,6 @@ from pathlib import Path
 import sys
 from typing import Any
 
-from cohere import ClientV2
-
 try:
     from src.rag.config import (
         RAG_CANDIDATE_K,
@@ -44,6 +42,11 @@ def rerank_with_cohere(
 
     if not api_key.strip():
         return candidates, {"status": "skipped", "detail": "RAG_COHERE_API_KEY is not set."}
+
+    try:
+        from cohere import ClientV2
+    except ModuleNotFoundError:
+        return candidates, {"status": "skipped", "detail": "Cohere SDK is not installed."}
 
     client = ClientV2(api_key=api_key.strip(), timeout=timeout)
     response = client.rerank(

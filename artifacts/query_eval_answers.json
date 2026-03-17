@@ -1,0 +1,107 @@
+[
+  {
+    "query": "What core architectural components do Transformers use to model sequences instead of recurrent or convolutional neural networks?",
+    "answer": "(195) 74 Introduction to Transformers where \u03b8 denotes the parameters of the student model 25. Using this loss, we can optimize \u03b8, for any given set of source sequences {x1, ...,xK}, in such a way as to minimize the qualityPN k=1 L(xk, \u03b8). Several different extensions to this basic method have been developed to model the problem of knowledge transfer between two models.",
+    "citations": [
+      "[1] 2311.17633v1.pdf chunk 45 | matched_by=bm25",
+      "[2] 2311.17633v1.pdf chunk 56 | matched_by=bm25"
+    ],
+    "rerank_status": {
+      "status": "skipped",
+      "detail": "Cohere SDK is not installed."
+    },
+    "result_count": 3,
+    "top_result_metadata": {
+      "file_extension": ".pdf",
+      "chunk_index": 45,
+      "ingest_version": "ci-eval",
+      "paper_id": "46dc44b881b8703bd533",
+      "source": "papers\\2311.17633v1.pdf",
+      "filename": "2311.17633v1.pdf"
+    }
+  },
+  {
+    "query": "In the standard Transformer encoder, what are the two main sub-layers found in each encoding block?",
+    "answer": "first optimize the model parameters on some unlabeled data. Then, we develop a predictor which takes the states of a hidden layer of the Transformer model and generates outputs for a probing task (see sub-figure (a)). The predictor can be trained as usual in which only the parameters of the predictor are optimized and the parameters of the Transformer model are fixed (see sub-figure (b)).",
+    "citations": [
+      "[1] 2311.17633v1.pdf chunk 14 | matched_by=bm25",
+      "[2] 2311.17633v1.pdf chunk 52 | matched_by=bm25+vector"
+    ],
+    "rerank_status": {
+      "status": "skipped",
+      "detail": "Cohere SDK is not installed."
+    },
+    "result_count": 3,
+    "top_result_metadata": {
+      "chunk_index": 14,
+      "source": "papers\\2311.17633v1.pdf",
+      "ingest_version": "ci-eval",
+      "file_extension": ".pdf",
+      "filename": "2311.17633v1.pdf",
+      "paper_id": "46dc44b881b8703bd533"
+    }
+  },
+  {
+    "query": "Why is parallelization difficult in recurrent models compared to Transformers?",
+    "answer": "Provided proper attribution is provided, Google hereby grants permission to reproduce the tables and figures in this paper solely for use in journalistic or scholarly works. Attention Is All You Need Ashish Vaswani\u2217 Google Brain avaswani@google.com Noam Shazeer\u2217 Google Brain noam@google.com Niki Parmar\u2217 Google Research nikip@google.com Jakob Uszkoreit\u2217 Google Research usz@google.com Llion Jones\u2217 Google Research llion@google.com Aidan N.",
+    "citations": [
+      "[1] 1706.03762v7.pdf chunk 0 | matched_by=bm25",
+      "[2] 1706.03762v7.pdf chunk 3 | matched_by=bm25"
+    ],
+    "rerank_status": {
+      "status": "skipped",
+      "detail": "Cohere SDK is not installed."
+    },
+    "result_count": 3,
+    "top_result_metadata": {
+      "chunk_index": 0,
+      "filename": "1706.03762v7.pdf",
+      "paper_id": "eef16ebceff54b5e93c9",
+      "ingest_version": "ci-eval",
+      "file_extension": ".pdf",
+      "source": "papers\\1706.03762v7.pdf"
+    }
+  },
+  {
+    "query": "What specific mechanism does the Transformer use to distinguish the order of words in a sequence?",
+    "answer": "how complex, are based on computing Pr( y|x). Because the attention models used in Transformer require computing the dot-product of each pair of the input vectors of a layer, the time complexity of the search algorithm is a quadratic function of the length of y. It is therefore not efficient to repeatedly compute the outputs of the attention models for positions that have been dealt with.",
+    "citations": [
+      "[1] 2311.17633v1.pdf chunk 9 | matched_by=bm25+vector",
+      "[2] 2311.17633v1.pdf chunk 11 | matched_by=bm25"
+    ],
+    "rerank_status": {
+      "status": "skipped",
+      "detail": "Cohere SDK is not installed."
+    },
+    "result_count": 3,
+    "top_result_metadata": {
+      "ingest_version": "ci-eval",
+      "file_extension": ".pdf",
+      "paper_id": "46dc44b881b8703bd533",
+      "filename": "2311.17633v1.pdf",
+      "chunk_index": 9,
+      "source": "papers\\2311.17633v1.pdf"
+    }
+  },
+  {
+    "query": "What BLEU score did the original Transformer achieve on the WMT 2014 English-to-German translation task?",
+    "answer": "Doing so requires a stack of O(n/k) convolutional layers in the case of contiguous kernels, or O(logk(n)) in the case of dilated convolutions [ 18], increasing the length of the longest paths between any two positions in the network. Convolutional layers are generally more expensive than recurrent layers, by a factor of k. Separable convolutions [ 6], however, decrease the complexity considerably, to O(k \u00b7 n \u00b7 d + n \u00b7 d2).",
+    "citations": [
+      "[1] 1706.03762v7.pdf chunk 4 | matched_by=bm25",
+      "[2] 1706.03762v7.pdf chunk 5 | matched_by=bm25+vector"
+    ],
+    "rerank_status": {
+      "status": "skipped",
+      "detail": "Cohere SDK is not installed."
+    },
+    "result_count": 3,
+    "top_result_metadata": {
+      "ingest_version": "ci-eval",
+      "source": "papers\\1706.03762v7.pdf",
+      "file_extension": ".pdf",
+      "filename": "1706.03762v7.pdf",
+      "paper_id": "eef16ebceff54b5e93c9",
+      "chunk_index": 4
+    }
+  }
+]

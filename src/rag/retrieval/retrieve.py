@@ -34,19 +34,48 @@ DEFAULT_QUERIES = [
 ]
 
 
+_RETRIEVAL_CACHE: dict[tuple[str, str, str], dict[str, Any]] = {}
+
+
 def _tokenize_for_bm25(text: str) -> list[str]:
     return text.lower().split()
 
 
-def _get_collection():
-    client, _storage_mode = _get_chroma_client(chroma_path=RAG_CHROMA_PATH)
-    return client.get_or_create_collection(name=RAG_COLLECTION_NAME)
+def _get_collection(
+    chroma_path: str | None = None,
+    collection_name: str | None = None,
+):
+    chroma_path = chroma_path or RAG_CHROMA_PATH
+    collection_name = collection_name or RAG_COLLECTION_NAME
+    client, _storage_mode = _get_chroma_client(chroma_path=chroma_path)
+    return client.get_or_create_collection(name=collection_name)
 
 
-def _load_chunk_corpus_from_chroma() -> list[dict[str, Any]]:
-    collection = _get_collection()
+def _cache_key(
+    chroma_path: str | None = None,
+    collection_name: str | None = None,
+    ingest_version: str | None = None,
+) -> tuple[str, str, str]:
+    chroma_path = chroma_path or RAG_CHROMA_PATH
+    collection_name = collection_name or RAG_COLLECTION_NAME
+    ingest_version = ingest_version or RAG_INGEST_VERSION
+    return (str(Path(chroma_path).resolve()), collection_name, ingest_version)
+
+
+def _load_chunk_corpus_from_chroma(
+    chroma_path: str | None = None,
+    collection_name: str | None = None,
+    ingest_version: str | None = None,
+) -> list[dict[str, Any]]:
+    chroma_path = chroma_path or RAG_CHROMA_PATH
+    collection_name = collection_name or RAG_COLLECTION_NAME
+    ingest_version = ingest_version or RAG_INGEST_VERSION
+    collection = _get_collection(
+        chroma_path=chroma_path,
+        collection_name=collection_name,
+    )
     rows = collection.get(
-        where={"ingest_version": RAG_INGEST_VERSION},
+        where={"ingest_version": ingest_version},
         include=["documents", "metadatas"],
     )
 
@@ -68,15 +97,77 @@ def _load_chunk_corpus_from_chroma() -> list[dict[str, Any]]:
     return chunk_records
 
 
+def invalidate_retrieval_cache(
+    chroma_path: str | None = None,
+    collection_name: str | None = None,
+    ingest_version: str | None = None,
+) -> None:
+    _RETRIEVAL_CACHE.pop(
+        _cache_key(
+            chroma_path=chroma_path,
+            collection_name=collection_name,
+            ingest_version=ingest_version,
+        ),
+        None,
+    )
+
+
+def warm_retrieval_cache(
+    chroma_path: str | None = None,
+    collection_name: str | None = None,
+    ingest_version: str | None = None,
+    force: bool = False,
+) -> dict[str, Any]:
+    chroma_path = chroma_path or RAG_CHROMA_PATH
+    collection_name = collection_name or RAG_COLLECTION_NAME
+    ingest_version = ingest_version or RAG_INGEST_VERSION
+    key = _cache_key(
+        chroma_path=chroma_path,
+        collection_name=collection_name,
+        ingest_version=ingest_version,
+    )
+    if not force and key in _RETRIEVAL_CACHE:
+        cache_entry = _RETRIEVAL_CACHE[key]
+        return {
+            "status": "warm",
+            "chunk_count": len(cache_entry["chunk_records"]),
+            "bm25_ready": cache_entry["bm25"] is not None,
+        }
+
+    chunk_records = _load_chunk_corpus_from_chroma(
+        chroma_path=chroma_path,
+        collection_name=collection_name,
+        ingest_version=ingest_version,
+    )
+    bm25 = None
+    if chunk_records:
+        tokenized_corpus = [
+            _tokenize_for_bm25(record["document"]) for record in chunk_records
+        ]
+        bm25 = BM25Okapi(tokenized_corpus)
+
+    _RETRIEVAL_CACHE[key] = {
+        "chunk_records": chunk_records,
+        "bm25": bm25,
+    }
+    return {
+        "status": "rebuilt" if force else "loaded",
+        "chunk_count": len(chunk_records),
+        "bm25_ready": bm25 is not None,
+    }
+
+
 def bm25_search(query: str, top_k: int = 3) -> list[dict[str, Any]]:
-    chunk_records = _load_chunk_corpus_from_chroma()
-    if not chunk_records:
+    key = _cache_key()
+    if key not in _RETRIEVAL_CACHE:
+        warm_retrieval_cache()
+
+    cache_entry = _RETRIEVAL_CACHE.get(key, {})
+    chunk_records = cache_entry.get("chunk_records", [])
+    bm25 = cache_entry.get("bm25")
+    if not chunk_records or bm25 is None:
         return []
 
-    tokenized_corpus = [
-        _tokenize_for_bm25(record["document"]) for record in chunk_records
-    ]
-    bm25 = BM25Okapi(tokenized_corpus)
     query_tokens = _tokenize_for_bm25(query)
     scores = bm25.get_scores(query_tokens)
 
@@ -191,6 +282,7 @@ def collect_rerank_candidates(
     candidate_k: int | None = None,
 ) -> list[dict[str, Any]]:
     """Return top chunks from BM25 and vector search for Cohere reranking."""
+    warm_retrieval_cache()
     candidate_count = candidate_k or top_k
     bm25_results = bm25_search(query, top_k=candidate_count)
     vector_results = vector_search(query, top_k=candidate_count)
